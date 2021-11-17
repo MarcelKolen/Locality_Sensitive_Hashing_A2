@@ -17,8 +17,10 @@ class CosineSimilarityBase(SimilarityBase):
     def __generate_random_projections(self, user_range):
         column_range_max = self.user_movie_matrix.get_shape()[1]
         dense_matrix = self.user_movie_matrix.todense()
-        #   for projection in random_projections:
-        #       self.__cosine_distance(dense_matrix[1], dense_matrix[2], self.user_movie_matrix[0].size, self.user_movie_matrix[1].size)
+        for i in range(0, 20):
+            for j in range(0, 20):
+                print("i: " + str(i) + " j: " + str(j))
+                print(self.__cosine_similarity(dense_matrix[i], dense_matrix[j], self.user_movie_matrix[i].size, self.user_movie_matrix[j].size))
 
 
 
