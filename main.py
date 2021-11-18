@@ -114,8 +114,6 @@ def main():
         # Load .npy file and convert into numpy array.
         data_file = np.load(data_path)
 
-        data_file = data_file[:10000]
-
         # Convert the datafile ((user*movies) x 3) [uid, mid, rt] into a sparse CSR matrix
         # With USER_IDS as rows (note uids are decremented: original_uid=1 -> uid=0, original_uid=2 -> uid=1, etc.)
         # and MOVIE_IDS as columns (note mids are decremented: original_mid=1 -> mid=0, original_mid=2 -> mid=1, etc.)
