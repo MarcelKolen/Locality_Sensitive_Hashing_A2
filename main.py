@@ -114,6 +114,8 @@ def main():
         # Load .npy file and convert into numpy array.
         data_file = np.load(data_path)
 
+        data_file = data_file[:10000]
+
         # Convert the datafile ((user*movies) x 3) [uid, mid, rt] into a sparse CSR matrix
         # With USER_IDS as rows (note uids are decremented: original_uid=1 -> uid=0, original_uid=2 -> uid=1, etc.)
         # and MOVIE_IDS as columns (note mids are decremented: original_mid=1 -> mid=0, original_mid=2 -> mid=1, etc.)
@@ -121,11 +123,16 @@ def main():
         matrix_shape = data_file.max(axis=0)
         user_movie_sp_matrix = csr_matrix((data_file[:, 2], (data_file[:, 0] - 1, data_file[:, 1] - 1)), shape=(matrix_shape[0], matrix_shape[1]))
 
+        print(matrix_shape)
+
+        # Explicitly mark for memory cleanup
+        del data_file
+
         # Call main similarity measure classes and execute their instances to
         # find similar pairs and print to designated file.
         try:
             if similarity_measure is SimilarityMeasureOptions.JACCARD:
-                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
+                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=100,
                                            similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="js.txt"))
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
