@@ -1,31 +1,61 @@
 import numpy as np
 import math
 from scipy.sparse import csr_matrix
+from sklearn.random_projection import GaussianRandomProjection
 
 from similarity_setup import SimilarityBase
 
 
 class CosineSimilarityBase(SimilarityBase):
     def __cosine_similarity(self, matrix_a, matrix_b, size_a, size_b):
-        distance = np.vdot(np.asarray(matrix_a), np.asarray(matrix_b))
-        size = (int(math.sqrt(size_a)) * int(math.sqrt(size_b))) * 25 # CS has values higher than 1 so 1x1 reaches to 5x5 so we have to compensate with 25
 
+        distance = np.vdot(np.asarray(matrix_a), np.asarray(matrix_b))
+        size = (math.sqrt(size_a) * math.sqrt(size_b))
         cos_dist = math.degrees(math.acos(distance / size))
 
         return 1 - (cos_dist/180)
 
+    def __size(self, user):
+        size = 0
+        for rated_movie in self.user_movie_matrix[user].nonzero():
+            if rated_movie[0] != 0:
+                for i in rated_movie:
+                    size += self.user_movie_matrix[user].getcol(i).max() ** 2
+
+        return size
+
     def __generate_random_projections(self, user_range):
         column_range_max = self.user_movie_matrix.get_shape()[1]
         dense_matrix = self.user_movie_matrix.todense()
+
+        # NU LIMITED TOT GECOMPRIMEERDE 20, OPLETTEN BIJ IMPLEMENTATIE
+        # PS: OOK EEN OPTIE OM EERST ALLE SIZES TE ACHTERHALEN, DAN DOEN WE NOG MINDER REDUNDANT SHIT. VOOR NU LAAT IK DIT FF ZO
         for i in range(0, 20):
-            for j in range(0, 20):
-                print("i: " + str(i) + " j: " + str(j))
-                print(self.__cosine_similarity(dense_matrix[i], dense_matrix[j], self.user_movie_matrix[i].size, self.user_movie_matrix[j].size))
+            size_i = self.__size(i)
+            for j in range(i+1, 20):
+                if i != j:
+                    size_j = self.__size(j)
+                    print("i: " + str(i) + " j: " + str(j))
+                    print(self.__cosine_similarity(dense_matrix[i], dense_matrix[j], size_i, size_j))
+
+
 
     def __call__(self, *args, **kwargs):
         print("Now running the Cosine Similarity Routine")
 
         # Print found pair to file (File path is pre-set)
+        # copy = self.user_movie_matrix[0].copy()
+        # copy.eliminate_zeros()
+
+
+
+
+        #rng = np.random.RandomState(42)
+        #X = rng.rand(100, 10000)
+        #transformer = GaussianRandomProjection(random_state=rng)
+        #X_new = transformer.fit_transform(self.user_movie_matrix)
+        #print(X_new)
+
 
         # Hier moet de routine komen voor de CS methode.
         self.__generate_random_projections((0,20))
