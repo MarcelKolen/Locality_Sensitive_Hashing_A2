@@ -129,14 +129,15 @@ def main():
         try:
             if similarity_measure is SimilarityMeasureOptions.JACCARD:
                 js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=100,
+                                           block_amount_in=4, block_row_size_in=25, buckets_amount_in=250, similarity_limit_in=0.5,
                                            similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="js.txt"))
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
-                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
+                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, similarity_limit_in=0.73,
                                           similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="cs.txt"))
                 cs()
             elif similarity_measure is SimilarityMeasureOptions.DISCRETE_COSINE:
-                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
+                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, similarity_limit_in=0.73,
                                                    similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1,
                                                                                                             out_file_name="dcs.txt"))
                 dcs()
