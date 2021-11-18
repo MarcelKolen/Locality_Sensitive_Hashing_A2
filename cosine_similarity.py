@@ -22,8 +22,6 @@ class CosineSimilarityBase(SimilarityBase):
                 print("i: " + str(i) + " j: " + str(j))
                 print(self.__cosine_similarity(dense_matrix[i], dense_matrix[j], self.user_movie_matrix[i].size, self.user_movie_matrix[j].size))
 
-
-
     def __call__(self, *args, **kwargs):
         print("Now running the Cosine Similarity Routine")
 
