@@ -123,8 +123,6 @@ def main():
         matrix_shape = data_file.max(axis=0)
         user_movie_sp_matrix = csr_matrix((data_file[:, 2], (data_file[:, 0] - 1, data_file[:, 1] - 1)), shape=(matrix_shape[0], matrix_shape[1]))
 
-        print(matrix_shape)
-
         # Explicitly mark for memory cleanup
         del data_file
 

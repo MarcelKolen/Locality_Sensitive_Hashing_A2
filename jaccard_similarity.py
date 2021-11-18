@@ -25,7 +25,7 @@ class JaccardSimilarityBase(SimilarityBase):
         dense_matrix = self.user_movie_matrix.todense()
 
         # For all columns (movies) loop through a range of users
-        # and calculate
+        # and calculate signatures.
         for c in range(0, column_range_max):
             for r in range(user_range[0], user_range[1]):
                 if dense_matrix[r, c] > 0:
@@ -44,12 +44,12 @@ class JaccardSimilarityBase(SimilarityBase):
         self.user_signatures = np.empty(shape=(self.user_movie_matrix.get_shape()[0], self.signature_size))
         self.user_signatures[:] = np.NaN
 
+        self.__generate_random_permutations()
+
     def __call__(self, *args, **kwargs):
         print("Now running the Jaccard Similarity Routine")
 
-        print(self.user_movie_matrix.get_shape()[0])
-
-        self.__generate_random_permutations()
+        # print(self.user_movie_matrix.get_shape()[0])
 
         self.__generate_signatures_for_users((0, 20))
 
@@ -57,6 +57,6 @@ class JaccardSimilarityBase(SimilarityBase):
         # Hier moet de routine komen voor de JS methode.
 
         # Print found pair to file (File path is pre-set)
-        self.similarity_output_function(0, 1)
+        # self.similarity_output_function(0, 1)
 
         return
