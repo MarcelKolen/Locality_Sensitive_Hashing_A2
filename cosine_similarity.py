@@ -20,6 +20,11 @@ class CosineSimilarityBase(SimilarityBase):
         column_range_max = self.user_movie_matrix.get_shape()[1]
         dense_matrix = self.user_movie_matrix.todense()
 
+        plane_norms = np.random.rand(nbits, dim) - 0.5
+
+        for i in range(0, column_range_max):
+            np.dot(np.asarray(matrix_a), plane_norms.T)
+
         # NU LIMITED TOT GECOMPRIMEERDE 20, OPLETTEN BIJ IMPLEMENTATIE
         # PS: OOK EEN OPTIE OM EERST ALLE SIZES TE ACHTERHALEN, DAN DOEN WE NOG MINDER REDUNDANT SHIT. VOOR NU LAAT IK DIT FF ZO
         for i in range(0, 20):
@@ -33,12 +38,17 @@ class CosineSimilarityBase(SimilarityBase):
 
 
     def __call__(self, *args, **kwargs):
+        nbits = 4
+        dim = 1
+
         print("Now running the Cosine Similarity Routine")
 
         # Print found pair to file (File path is pre-set)
-
         # DIT IS IN PRINCIPE DE RANDOM PROJECTION, MAAR WAT DOEN WE MET DIE VECTOR?!?!?!?!
-        rng = np.random.RandomState(42)
+
+        plane_norms = np.random.rand(nbits, dim) - 0.5
+        for
+
         #X = rng.rand(100, 10000) #SIZE?!?!?!!?!
         transformer = GaussianRandomProjection(random_state=rng)
         X_new = transformer.fit_transform(self.user_movie_matrix)
