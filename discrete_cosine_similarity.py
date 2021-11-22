@@ -1,3 +1,8 @@
+### Advances In Data Mining
+### Assignment 2
+### Luit Verschuur 1811053, Marcel Kolenbrander 1653415.
+
+
 import numpy as np
 from scipy.sparse import csr_matrix
 
