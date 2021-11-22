@@ -119,7 +119,27 @@ def main():
         # and MOVIE_IDS as columns (note mids are decremented: original_mid=1 -> mid=0, original_mid=2 -> mid=1, etc.)
         # the elements in the sparse matrix represent the ratings.
         matrix_shape = data_file.max(axis=0)
+
         user_movie_sp_matrix = csr_matrix((data_file[:, 2], (data_file[:, 0] - 1, data_file[:, 1] - 1)), shape=(matrix_shape[0], matrix_shape[1]))
+
+        # start_time = time.time()
+        # num = 0
+        #
+        # for i in range(0, 1000):
+        #     num += np.count_nonzero(user_movie_sp_matrix.getrow(i).toarray()[0])
+        # print(num)
+        # print(f"np method took: {time.time() - start_time}")
+        #
+        # print(user_movie_sp_matrix.getrow(0).toarray()[0])
+        #
+        # num = 0
+        # start_time = time.time()
+        # for i in range(0, 1000):
+        #     for c in user_movie_sp_matrix.getrow(i).toarray()[0]:
+        #         if c > 0:
+        #             num += 1
+        # print(num)
+        # print(f"loop method took: {time.time() - start_time}")
 
         # Explicitly mark for memory cleanup
         del data_file
@@ -128,8 +148,8 @@ def main():
         # find similar pairs and print to designated file.
         try:
             if similarity_measure is SimilarityMeasureOptions.JACCARD:
-                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=100,
-                                           block_amount_in=4, block_row_size_in=25, buckets_amount_in=250, similarity_limit_in=0.5,
+                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=250,
+                                           block_amount_in=25, block_row_size_in=10, buckets_amount_in=500, similarity_limit_in=0.5,
                                            similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="js.txt"))
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
