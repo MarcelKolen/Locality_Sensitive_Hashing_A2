@@ -1,6 +1,6 @@
 ### Advances In Data Mining
 ### Assignment 2
-### Luit Verschuur 1811053, Marcel Kolenbrander 1653415
+### Luit Verschuur 1811053, Marcel Kolenbrander 1653415.
 
 
 import sys
