@@ -1,3 +1,8 @@
+### Advances In Data Mining
+### Assignment 2
+### Luit Verschuur 1811053, Marcel Kolenbrander 1653415
+
+
 import sys
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -122,25 +127,6 @@ def main():
 
         user_movie_sp_matrix = csr_matrix((data_file[:, 2], (data_file[:, 0] - 1, data_file[:, 1] - 1)), shape=(matrix_shape[0], matrix_shape[1]))
 
-        # start_time = time.time()
-        # num = 0
-        #
-        # for i in range(0, 1000):
-        #     num += np.count_nonzero(user_movie_sp_matrix.getrow(i).toarray()[0])
-        # print(num)
-        # print(f"np method took: {time.time() - start_time}")
-        #
-        # print(user_movie_sp_matrix.getrow(0).toarray()[0])
-        #
-        # num = 0
-        # start_time = time.time()
-        # for i in range(0, 1000):
-        #     for c in user_movie_sp_matrix.getrow(i).toarray()[0]:
-        #         if c > 0:
-        #             num += 1
-        # print(num)
-        # print(f"loop method took: {time.time() - start_time}")
-
         # Explicitly mark for memory cleanup
         del data_file
 
@@ -148,16 +134,18 @@ def main():
         # find similar pairs and print to designated file.
         try:
             if similarity_measure is SimilarityMeasureOptions.JACCARD:
-                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=250,
-                                           block_amount_in=25, block_row_size_in=10, buckets_amount_in=500, similarity_limit_in=0.5,
+                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=75,
+                                           block_amount_in=15, block_row_size_in=5, similarity_limit_in=0.5,
                                            similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="js.txt"))
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
-                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, similarity_limit_in=0.73,
+                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=75,
+                                           block_amount_in=15, block_row_size_in=5, similarity_limit_in=0.73,
                                           similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="cs.txt"))
                 cs()
             elif similarity_measure is SimilarityMeasureOptions.DISCRETE_COSINE:
-                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, similarity_limit_in=0.73,
+                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=75,
+                                           block_amount_in=15, block_row_size_in=5, similarity_limit_in=0.73,
                                                    similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1,
                                                                                                             out_file_name="dcs.txt"))
                 dcs()
