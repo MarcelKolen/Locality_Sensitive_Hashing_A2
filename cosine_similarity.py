@@ -14,32 +14,36 @@ from similarity_setup import SimilarityBase
 
 
 class CosineSimilarityBase(SimilarityBase):
-    random_projections = []
+    dense_matrix = []
+    linalg_norm = []
 
     def __calculate_cosine_similarity(self, usr_0, usr_1):
-        dense_matrix = self.user_movie_matrix.todense()
+        if usr_0 == usr_1:
+            return 0
+
         distance = np.vdot(np.array(self.user_movie_matrix.getrow(usr_0).toarray()), np.array(self.user_movie_matrix.getrow(usr_1).toarray()))
-        size = LA.norm(dense_matrix[usr_0]) * LA.norm(dense_matrix[usr_1])
+        size = self.linalg_norm[usr_0] * self.linalg_norm[usr_1]
 
         cos_dist = math.degrees(math.acos(distance / size))
-
         return 1 - (cos_dist/180)
 
     def __generate_random_projections(self, user_range):
         nbits = self.user_movie_matrix_shape[1]
-        dense_matrix = self.user_movie_matrix.todense()
-        random_projections = []
 
         plane_norms = np.random.rand(nbits, self.signature_size) - 0.5
         for r in user_range:
-            self.random_projections.append(np.dot(np.asarray(dense_matrix[r]), plane_norms))
-            rand_proj = np.asarray(self.random_projections[r]) > 0
-            for i in rand_proj:
-                for d in range(0, self.signature_size):
-                    self.user_signatures[r, d] = i[d]
+            rand_proj = np.asarray(np.dot(np.asarray(self.dense_matrix[r]), plane_norms)) > 0
+            for i in range(0, self.signature_size):
+                self.user_signatures[r, i] = rand_proj[0][i]
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.dense_matrix = self.user_movie_matrix.todense()
+        for i in range(0, self.dense_matrix.shape[0]):
+            self.linalg_norm.append(LA.norm(self.dense_matrix[i]))
+
 
     def __call__(self, *args, **kwargs):
         print("Now running the Cosine Similarity Routine")
