@@ -27,16 +27,15 @@ class CosineSimilarityBase(SimilarityBase):
 
     def __generate_random_projections(self, user_range):
         nbits = self.user_movie_matrix_shape[1]
-        dim = 4 # Variable to play with
         dense_matrix = self.user_movie_matrix.todense()
         random_projections = []
 
-        plane_norms = np.random.rand(nbits, dim) - 0.5
+        plane_norms = np.random.rand(nbits, self.signature_size) - 0.5
         for r in user_range:
             self.random_projections.append(np.dot(np.asarray(dense_matrix[r]), plane_norms))
             rand_proj = np.asarray(self.random_projections[r]) > 0
             for i in rand_proj:
-                for d in range(0, dim):
+                for d in range(0, self.signature_size):
                     self.user_signatures[r, d] = i[d]
 
     def __init__(self, *args, **kwargs):
