@@ -52,9 +52,9 @@ class SimilarityBase:
         :return:
         """
 
-        self.buckets = list(filter(lambda dict_value: len(dict_value) > 1, self.buckets.values()))
+        self.buckets = [list(set(el)) for el in list(filter(lambda dict_value: len(dict_value) > 1, self.buckets.values()))]
 
-    def find_similar_users(self, similarity_function, bucket_range):
+    def find_similar_users(self, similarity_function, bucket_range=None):
         """
         Users who share the same hash bucket in the bucket table are similarity candidates.
         For each candidate pair in the buckets, check their actual similarity using the similarity function
@@ -67,7 +67,7 @@ class SimilarityBase:
         print(bucket_range)
 
         # For each bucket loop through their items (note that the items are lists of user ids).
-        for bucket_i in bucket_range:
+        for bucket_i in bucket_range if bucket_range is not None else range(0, len(self.buckets)):
             bucket = self.buckets[bucket_i]
             bucket_len = len(bucket)
 
