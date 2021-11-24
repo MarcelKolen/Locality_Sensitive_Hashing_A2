@@ -139,13 +139,13 @@ def main():
                                            similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="js.txt"))
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
-                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=75,
-                                           block_amount_in=15, block_row_size_in=5, similarity_limit_in=0.73,
+                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=150,
+                                           block_amount_in=10, block_row_size_in=15, similarity_limit_in=0.73,
                                           similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="cs.txt"))
                 cs()
             elif similarity_measure is SimilarityMeasureOptions.DISCRETE_COSINE:
-                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=75,
-                                           block_amount_in=15, block_row_size_in=5, similarity_limit_in=0.73,
+                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=225,
+                                           block_amount_in=15, block_row_size_in=15, similarity_limit_in=0.73,
                                                    similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1,
                                                                                                             out_file_name="dcs.txt"))
                 dcs()
