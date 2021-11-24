@@ -8,64 +8,48 @@ import math
 import time
 
 from scipy.sparse import csr_matrix
+from scipy.sparse import linalg as spla
 from numpy import linalg as LA
 
+from parallels import Parallels
 from similarity_setup import SimilarityBase
 
 
 class CosineSimilarityBase(SimilarityBase):
-    dense_matrix = []
     linalg_norm = []
 
-    def __calculate_cosine_similarity(self, usr_0, usr_1):
+    def calculate_user_similarity(self, usr_0, usr_1):
+        """
+
+        :param usr_0: A users ID
+        :param usr_1: A users ID
+        :return: The cosine similarity between 0. and 1. (inclusive boundaries)
+        """
         if usr_0 == usr_1:
             return 0
 
-        distance = np.vdot(np.array(self.user_movie_matrix.getrow(usr_0).toarray()), np.array(self.user_movie_matrix.getrow(usr_1).toarray()))
+        distance = self.user_movie_matrix.getrow(usr_0).dot(self.user_movie_matrix.getrow(usr_1).transpose()).toarray()[0][0]
         size = self.linalg_norm[usr_0] * self.linalg_norm[usr_1]
 
         cos_dist = math.degrees(math.acos(distance / size))
         return 1 - (cos_dist/180)
 
-    def __generate_random_projections(self, user_range):
+    def generate_signatures_for_users(self, user_range):
         nbits = self.user_movie_matrix_shape[1]
+
+        user_signatures = np.empty(shape=(user_range.stop - user_range.start, self.signature_size))
+        user_signatures[:] = np.NaN
 
         plane_norms = np.random.rand(nbits, self.signature_size) - 0.5
         for r in user_range:
-            rand_proj = np.asarray(np.dot(np.asarray(self.dense_matrix[r]), plane_norms)) > 0
+            rand_proj = self.user_movie_matrix.getrow(r).dot(plane_norms)[0] > 0
             for i in range(0, self.signature_size):
-                self.user_signatures[r, i] = rand_proj[0][i]
+                user_signatures[r - user_range.stop, i] = rand_proj[i]
 
+        return user_signatures
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def init(self, *args, **kwargs):
+        # Get the linear algebra norm for each row.
+        self.linalg_norm = spla.norm(self.user_movie_matrix, axis=1)
 
-        self.dense_matrix = self.user_movie_matrix.todense()
-        for i in range(0, self.dense_matrix.shape[0]):
-            self.linalg_norm.append(LA.norm(self.dense_matrix[i]))
-
-
-    def __call__(self, *args, **kwargs):
-        print("Now running the Cosine Similarity Routine")
-
-        print("Generating random projections")
-        start_time = time.perf_counter()
-        self.__generate_random_projections(range(0, int(self.user_movie_matrix_shape[0])))
-        print(f"Generating random projections took: {time.perf_counter() - start_time}\n")
-
-        print("Generating hashes")
-        start_time = time.perf_counter()
-        self.hash_blocks(range(0, int(self.user_movie_matrix_shape[0])))
-        print(f"Generating hashes took: {time.perf_counter() - start_time}\n")
-
-        self.reduce_buckets()
-
-        print("Evaluating similarity canidates")
-        start_time = time.perf_counter()
-        self.find_similar_users(self.__calculate_cosine_similarity)
-        print(f"Evaluating similarity canidates took: {time.perf_counter() - start_time}\n")
-
-
-        return
-
-
+        self.welcome_text = "Now running the Cosine Similarity Routine"

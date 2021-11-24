@@ -4,13 +4,15 @@
 
 
 import numpy as np
-from itertools import compress
+import time
 
+from parallels import Parallels
 
 class SimilarityBase:
     user_movie_matrix = ...
     user_movie_matrix_shape = ...
     similarity_output_function = ...
+    result_file_name = ...
     random_seed = ...
     similarity_limit = ...
     signature_size = ...
@@ -18,6 +20,11 @@ class SimilarityBase:
     block_amount = ...
     block_column_size = ...
     buckets = {}
+    welcome_text = "Now running the GENERIC Similarity Routine"
+    number_of_processes = ...
+
+    def output_pair_to_file(self, usr_0, usr_1):
+        self.similarity_output_function(usr_0, usr_1, out_file_name=self.result_file_name)
 
     def hash_blocks(self, user_range):
         """
@@ -48,13 +55,64 @@ class SimilarityBase:
     def reduce_buckets(self):
         """
         Reduce the bucket table by removing singular elements and convert to a list.
+        Reduce individual elements by removing duplicate entries.
 
         :return:
         """
 
         self.buckets = [list(set(el)) for el in list(filter(lambda dict_value: len(dict_value) > 1, self.buckets.values()))]
 
-    def find_similar_users(self, similarity_function, bucket_range=None):
+    @staticmethod
+    def __sort_func(e):
+        return len(e)
+
+    def sort_buckets(self, reversed=False):
+        """
+        Sort the buckets by number of elements in each bucket from smallest to biggest
+        (or biggest to smallest if reversed is true).
+        If the elements in the following example list the number of keys stored in each bucket:
+        [2, 3, 2, 5, 3, 7, 9, 4]
+        Then the sorted variant is:
+        [2, 2, 3, 3, 4, 5, 7, 9]
+        If reversed is True, then the sorted variant is reversed (biggest to smallest).
+
+        :param reversed: Indicate whether the buckets are
+        :return:
+        """
+
+        self.buckets = sorted(self.buckets, key=self.__sort_func, reverse=reversed)
+
+    def re_arrange_buckets(self, chunks=1):
+        """
+        Re arrange the buckets into alternating chunks.
+        If the following example list is the input list:
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        Then a re arranged list with chunk size 4 is:
+        [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]
+
+        :param chunks: Number of chunks to divide the dataset in
+        :return: Chunk boundary areas
+        """
+
+        re_arranged_buckets = [self.buckets[i::chunks] for i in range(0, chunks)]
+
+        chunk_borders = [0] * len(re_arranged_buckets)
+
+        last_chunk_border = 0
+
+        for i, chunk in enumerate(re_arranged_buckets):
+            current_chunk_border = len(chunk)
+
+            chunk_borders[i] = range(last_chunk_border, current_chunk_border + last_chunk_border)
+
+            last_chunk_border += current_chunk_border
+
+        # Unpack chunks back into a list.
+        self.buckets = [item for sublist in re_arranged_buckets for item in sublist]
+
+        return chunk_borders
+
+    def find_similar_users(self, bucket_range, similarity_function):
         """
         Users who share the same hash bucket in the bucket table are similarity candidates.
         For each candidate pair in the buckets, check their actual similarity using the similarity function
@@ -64,10 +122,8 @@ class SimilarityBase:
         :return:
         """
 
-        print(bucket_range)
-
         # For each bucket loop through their items (note that the items are lists of user ids).
-        for bucket_i in bucket_range if bucket_range is not None else range(0, len(self.buckets)):
+        for bucket_i in bucket_range:
             bucket = self.buckets[bucket_i]
             bucket_len = len(bucket)
 
@@ -80,11 +136,39 @@ class SimilarityBase:
                 for i in range(0, bucket_len):
                     for j in range(i + 1, bucket_len):
                         if (sim := similarity_function(bucket[i], bucket[j])) > self.similarity_limit:
-                            self.similarity_output_function(bucket[i], bucket[j])
+                            self.output_pair_to_file(bucket[i], bucket[j])
                             print(f"Pair {bucket[i]}:{bucket[j]} are similar ({sim})")
 
-    def __init__(self, user_movie_matrix_in=None, similarity_output_function_in=None, random_seed_in=None,
-                 similarity_limit_in=None, signature_size_in=None, block_amount_in=None, block_row_size_in=None, *kwargs):
+    def bucket_metrics(self):
+        average_length = 0.
+        min = np.inf
+        max = 0.
+
+        for bucket in self.buckets:
+            len_bucket = len(bucket)
+
+            if min > len_bucket:
+                min = len_bucket
+            if max < len_bucket:
+                max = len_bucket
+
+            average_length += len_bucket
+
+        average_length /= len(self.buckets)
+
+        print(f"There are {len(self.buckets)} buckets in total. On average they have a size of {average_length} (min {min}, max {max}) \n")
+
+    def generate_signatures_for_users(self, user_range):
+        pass
+
+    def calculate_user_similarity(self, usr_0, usr_1):
+        pass
+
+    def init(self, *args, **kwargs):
+        pass
+
+    def __init__(self, user_movie_matrix_in=None, similarity_output_function_in=None, result_file_name_in=None, random_seed_in=None,
+                 similarity_limit_in=None, signature_size_in=None, block_amount_in=None, block_row_size_in=None, number_of_processes_in=None, *args, **kwargs):
         if user_movie_matrix_in is not None:
             self.user_movie_matrix = user_movie_matrix_in
         else:
@@ -96,6 +180,11 @@ class SimilarityBase:
             self.similarity_output_function = similarity_output_function_in
         else:
             raise ValueError("File output function not initiated")
+
+        if result_file_name_in is not None:
+            self.result_file_name = result_file_name_in
+        else:
+            raise ValueError("Output file not initiated")
 
         if random_seed_in is not None:
             self.random_seed = random_seed_in
@@ -125,9 +214,74 @@ class SimilarityBase:
         if self.block_amount * self.block_column_size > self.signature_size:
             raise ValueError("Hash blocks exceed the signature size!")
 
-        # Initialize the signatures as an empty 2D matrix of users and a corresponding signature vector for each user.
-        self.user_signatures = np.empty(shape=(self.user_movie_matrix_shape[0], self.signature_size))
-        self.user_signatures[:] = np.NaN
+        if number_of_processes_in is not None:
+            self.number_of_processes = number_of_processes_in
+        else:
+            self.number_of_processes = 1
 
-        # Set random seed
+        # Set random seed.
         np.random.seed(self.random_seed)
+
+        # Call init for the inherit classes.
+        self.init(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        # Display the current running routine.
+        print(self.welcome_text)
+
+        # Define size of problem space.
+        total_user_space = int(self.user_movie_matrix_shape[0])
+
+        print("Generating signatures")
+        start_time = time.perf_counter()
+
+        # Split between running in parallel or on a single process.
+        if self.number_of_processes > 1:
+            # Initialize parallel workers.
+            pa = Parallels(target_function_in=self.generate_signatures_for_users,
+                           max_number_of_workers_in=self.number_of_processes)
+
+            # Find user signatures (min hashing/random projections) and store results in user_signatures.
+            # This process is split up and divided over workers by mapping chunks of the problem space. Each worker
+            # returns a subset of the solution, which have to be concatenated into one solution.
+            self.user_signatures = np.concatenate(tuple(i[1] for i in sorted(pa.run_map(
+                [range(int(i * total_user_space / self.number_of_processes), int((i + 1) * total_user_space / self.number_of_processes)) for i in
+                 range(0, self.number_of_processes)]).items(), key=lambda i: i[0])), axis=0)
+        else:
+            # Find user signatures (min hashing/random projections) and store results in user_signatures.
+            self.user_signatures = self.generate_signatures_for_users(range(0, total_user_space))
+        print(f"Generating signatures took: {time.perf_counter() - start_time}\n")
+
+
+        print("Generating hashes")
+        start_time = time.perf_counter()
+        # Hash the user signatures into buckets.
+        self.hash_blocks(range(0, total_user_space))
+        print(f"Generating hashes took: {time.perf_counter() - start_time}\n")
+
+        # Remove buckets with only one user in it.
+        self.reduce_buckets()
+
+        # Sort buckets from smallest to largest.
+        self.sort_buckets()
+
+        self.bucket_metrics()
+
+        print("Evaluating similarity canidates")
+        start_time = time.perf_counter()
+
+        if self.number_of_processes > 1:
+            # Re arrange the buckets based on number of processes to optimize the load between the different workers.
+            # Each worker gets a slice of the problem space (buckets) with a roughly equal distribution from small to large
+            # buckets between all workers.
+            # If the following example list is the input list where each element represents the length of a bucket:
+            # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            # Then a re arranged list with chunk size 4 (number of processes) is:
+            # [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]
+            chunk_borders = self.re_arrange_buckets(self.number_of_processes)
+
+            pa = Parallels(target_function_in=self.find_similar_users, max_number_of_workers_in=self.number_of_processes)
+            pa.run_map(chunk_borders, (self.calculate_user_similarity, ))
+        else:
+            self.find_similar_users(range(0, len(self.buckets)), self.calculate_user_similarity)
+        print(f"Evaluating similarity canidates took: {time.perf_counter() - start_time}\n")

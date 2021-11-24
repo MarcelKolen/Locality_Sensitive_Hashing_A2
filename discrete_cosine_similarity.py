@@ -10,62 +10,37 @@ import time
 from scipy.sparse import csr_matrix
 from numpy import linalg as LA
 
+from parallels import Parallels
 from similarity_setup import SimilarityBase
+from cosine_similarity import CosineSimilarityBase
 
 
-class DiscreteCosineSimilarityBase(SimilarityBase):
-    dense_matrix = []
-    nonzero = []
+class DiscreteCosineSimilarityBase(CosineSimilarityBase):
+    binary_matrix = []
+    sqrt_non_zero_count_binary_matrix = []
 
-    def __calculate_discrete_cosine_similarity(self, usr_0, usr_1):
+    def calculate_user_similarity(self, usr_0, usr_1):
+        """
+
+        :param usr_0: A users ID
+        :param usr_1: A users ID
+        :return: The discrete cosine similarity between 0. and 1. (inclusive boundaries)
+        """
+
         if usr_0 == usr_1:
             return 0
 
-        distance = np.bitwise_and(self.dense_matrix[usr_0], self.dense_matrix[usr_1]).sum()
-        size = self.nonzero[usr_0] * self.nonzero[usr_1]
+        distance = self.binary_matrix.getrow(usr_0).dot(self.binary_matrix.getrow(usr_1).transpose()).toarray()[0][0]
+        size = self.sqrt_non_zero_count_binary_matrix[usr_0] * self.sqrt_non_zero_count_binary_matrix[usr_1]
 
-        cos_dist = math.degrees(math.acos(distance / size))
-        return 1 - (cos_dist/180)
+        return 1 - (math.degrees(math.acos(distance / size))/180)
 
-    def __generate_random_projections(self, user_range):
-        nbits = self.user_movie_matrix_shape[1]
+    def init(self, *args, **kwargs):
+        # Convert matrix into a binary matrix where all 0 values remain zero and all non zero values are 1.
+        self.binary_matrix = self.user_movie_matrix.copy()
+        self.binary_matrix.data = np.ones_like(self.binary_matrix.data)
 
-        plane_norms = np.random.rand(nbits, self.signature_size) - 0.5
-        for r in user_range:
-            rand_proj = np.asarray(np.dot(np.asarray(self.dense_matrix[r]), plane_norms)) > 0
-            for i in range(0, self.signature_size):
-                self.user_signatures[r, i] = rand_proj[i]
+        # Get the square root of number of non zero elements per row.
+        self.sqrt_non_zero_count_binary_matrix = np.sqrt(self.binary_matrix.getnnz(axis=1))
 
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.dense_matrix = np.where(np.asarray(self.user_movie_matrix.todense()) > 0, 1, 0)
-        for i in range(0, self.dense_matrix.shape[0]):
-            self.nonzero.append(math.sqrt(np.count_nonzero(self.dense_matrix[i])))
-
-
-    def __call__(self, *args, **kwargs):
-        print("Now running the Cosine Similarity Routine")
-
-        print("Generating random projections")
-        start_time = time.perf_counter()
-        self.__generate_random_projections(range(0, int(self.user_movie_matrix_shape[0])))
-        print(f"Generating random projections took: {time.perf_counter() - start_time}\n")
-
-        print("Generating hashes")
-        start_time = time.perf_counter()
-        self.hash_blocks(range(0, int(self.user_movie_matrix_shape[0])))
-        print(f"Generating hashes took: {time.perf_counter() - start_time}\n")
-
-        self.reduce_buckets()
-
-        print("Evaluating similarity canidates")
-        start_time = time.perf_counter()
-        self.find_similar_users(self.__calculate_discrete_cosine_similarity)
-        print(f"Evaluating similarity canidates took: {time.perf_counter() - start_time}\n")
-
-
-        return
-
-
+        self.welcome_text = "Now running the Discrete Cosine Similarity Routine"

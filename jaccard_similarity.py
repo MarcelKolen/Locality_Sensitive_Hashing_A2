@@ -1,25 +1,26 @@
 ### Advances In Data Mining
 ### Assignment 2
 ### Luit Verschuur 1811053, Marcel Kolenbrander 1653415
-
+import multiprocessing
 
 import numpy as np
 from scipy.sparse import csr_matrix
 
 import time
 
+from parallels import Parallels
 from similarity_setup import SimilarityBase
 
 
 class JaccardSimilarityBase(SimilarityBase):
-    column_permutations = []
+    column_permutations = ...
     signature_size = ...
     user_signatures = ...
     block_amount = ...
     block_column_size = ...
     buckets = {}
 
-    def __random_permutation(self, size):
+    def random_permutation(self, size):
         """
         Return an array with a random arrangement between 0 and size with no replacements (no duplicates).
 
@@ -29,7 +30,7 @@ class JaccardSimilarityBase(SimilarityBase):
 
         return np.random.choice(np.arange(0, size), replace=False, size=(size,))
 
-    def __generate_random_permutations(self):
+    def generate_random_permutations(self):
         """
         Generate a set of random permutation arrays using the __random_permutation function.
         The size of this random random permutation array is the user signature size and the number of columns
@@ -38,33 +39,13 @@ class JaccardSimilarityBase(SimilarityBase):
         :return:
         """
 
-        shape = self.user_movie_matrix.get_shape()[1]
+        shape = self.user_movie_matrix_shape[1]
 
         # Generate random permutations to enable signature generation.
         for i in range(0, self.signature_size):
-            self.column_permutations.append(self.__random_permutation(shape))
+            self.column_permutations[i] = self.random_permutation(shape)
 
-    def __generate_signatures_for_users(self, user_range):
-        """
-        For each user (row) in a given range, calculate the min hashes using a random permutation of the columns.
-        The collection of min hashes form the signature for the users.
-
-        :param user_range: A range of users (rows) over which the loop should run
-        :return:
-        """
-
-        # For each users (row) calculate the minhash.
-        for r in user_range:
-            # Find all non zero column positions and store them in an array to be used as a mask.
-            non_zero_column_positions = np.nonzero(self.user_movie_matrix.getrow(r).toarray()[0])[0]
-
-            # For each random permutation, find the corresponding signature element by taking the permutation value for
-            # the first column to corresponding with a non-zero value. This can be done by applying a mask over the
-            # random permutations and finding the lowest value.
-            for i, h in enumerate(self.column_permutations):
-                self.user_signatures[r, i] = np.min(h[non_zero_column_positions])
-
-    def __calculate_jaccard_similarity(self, usr_0, usr_1):
+    def calculate_user_similarity(self, usr_0, usr_1):
         """
         Calculate the jaccard similarity (a value between 0. and 1.) of two given users. Compare the users using their
         original data entries. The jaccard similarity is the quotient between the intersect and the union of the users.
@@ -76,36 +57,45 @@ class JaccardSimilarityBase(SimilarityBase):
 
         # Convert user movie ratings to binary values. If given a rating (user rated movie) give a 1,
         # else a 0 (user has not rated movie)
-        usr_0_cp_binary = np.where(np.array(self.user_movie_matrix.getrow(usr_0).toarray()) > 0, 1, 0)
-        usr_1_cp_binary = np.where(np.array(self.user_movie_matrix.getrow(usr_1).toarray()) > 0, 1, 0)
+        usr_0_cp_binary = self.user_movie_matrix.getrow(usr_0).copy()
+        usr_0_cp_binary.data = np.ones_like(usr_0_cp_binary.data)
+        usr_0_cp_binary = usr_0_cp_binary.toarray()
+
+        usr_1_cp_binary = self.user_movie_matrix.getrow(usr_1).copy()
+        usr_1_cp_binary.data = np.ones_like(usr_1_cp_binary.data)
+        usr_1_cp_binary = usr_1_cp_binary.toarray()
 
         # The intersect can also be seen as the "and" and the union can also been seen as an "or". Calculate the jaccard
-        # similarity by taking the quotient of the sums of the and and or of the two users.
+        # similarity by taking the quotient of the sums o the and and or of the two users.
         return np.bitwise_and(usr_0_cp_binary, usr_1_cp_binary).sum() / np.bitwise_or(usr_0_cp_binary, usr_1_cp_binary).sum()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def generate_signatures_for_users(self, user_range):
+        """
+        For each user (row) in a given range, calculate the min hashes using a random permutation of the columns.
+        The collection of min hashes form the signature for the users.
 
-        self.__generate_random_permutations()
+        :param user_range: A range of users (rows) over which the loop should run
+        :return: An 2D array containing signatures for the users based on minhashing
+        """
+        user_signatures = np.empty(shape=(user_range.stop - user_range.start, self.signature_size))
+        user_signatures[:] = np.NaN
 
-    def __call__(self, *args, **kwargs):
-        print("Now running the Jaccard Similarity Routine")
+        # For each users (row) calculate the minhash.
+        for r in user_range:
+            # Find all non zero column positions and store them in an array to be used as a mask.
+            non_zero_column_positions = self.user_movie_matrix.getrow(r).nonzero()[1]
 
-        print("Generating signatures")
-        start_time = time.perf_counter()
-        self.__generate_signatures_for_users(range(0, int(self.user_movie_matrix_shape[0]/4)))
-        print(f"Generating signatures took: {time.perf_counter() - start_time}\n")
+            # For each random permutation, find the corresponding signature element by taking the permutation value for
+            # the first column to corresponding with a non-zero value. This can be done by applying a mask over the
+            # random permutations and finding the lowest value.
+            for i, h in enumerate(self.column_permutations):
+                user_signatures[r - user_range.stop, i] = np.min(h[non_zero_column_positions])
 
-        print("Generating hashes")
-        start_time = time.perf_counter()
-        self.hash_blocks(range(0, int(self.user_movie_matrix_shape[0]/4)))
-        print(f"Generating hashes took: {time.perf_counter() - start_time}\n")
+        return user_signatures
 
-        self.reduce_buckets()
+    def init(self, *args, **kwargs):
+        self.column_permutations = np.empty((self.signature_size, self.user_movie_matrix_shape[1]))
 
-        print("Evaluating similarity canidates")
-        start_time = time.perf_counter()
-        self.find_similar_users(self.__calculate_jaccard_similarity)
-        print(f"Evaluating similarity canidates took: {time.perf_counter() - start_time}\n")
+        self.generate_random_permutations()
 
-        return
+        self.welcome_text = "Now running the Jaccard Similarity Routine"

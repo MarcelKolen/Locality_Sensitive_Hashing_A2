@@ -2,7 +2,6 @@
 ### Assignment 2
 ### Luit Verschuur 1811053, Marcel Kolenbrander 1653415.
 
-
 import sys
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -64,7 +63,7 @@ def argument_help(*kwargs):
 mode_options = {
     'js': SimilarityMeasureOptions.JACCARD,
     'cs': SimilarityMeasureOptions.COSINE,
-    'ds': SimilarityMeasureOptions.DISCRETE_COSINE
+    'dcs': SimilarityMeasureOptions.DISCRETE_COSINE
 }
 
 
@@ -134,20 +133,22 @@ def main():
         # find similar pairs and print to designated file.
         try:
             if similarity_measure is SimilarityMeasureOptions.JACCARD:
-                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=75,
-                                           block_amount_in=15, block_row_size_in=5, similarity_limit_in=0.5,
-                                           similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="js.txt"))
+                js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
+                                           signature_size_in=150, block_amount_in=25, block_row_size_in=6,
+                                           similarity_limit_in=0.5, similarity_output_function_in=write_pair_to_file,
+                                           result_file_name_in="js.txt", number_of_processes_in=8)
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
-                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=150,
-                                           block_amount_in=10, block_row_size_in=15, similarity_limit_in=0.73,
-                                          similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1, out_file_name="cs.txt"))
+                cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
+                                          signature_size_in=150, block_amount_in=10, block_row_size_in=15,
+                                          similarity_limit_in=0.73, similarity_output_function_in=write_pair_to_file,
+                                          result_file_name_in="cs.txt", number_of_processes_in=8)
                 cs()
             elif similarity_measure is SimilarityMeasureOptions.DISCRETE_COSINE:
-                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed, signature_size_in=225,
-                                           block_amount_in=15, block_row_size_in=15, similarity_limit_in=0.73,
-                                                   similarity_output_function_in=lambda usr_0, usr_1: write_pair_to_file(usr_0, usr_1,
-                                                                                                            out_file_name="dcs.txt"))
+                dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
+                                                   signature_size_in=225, block_amount_in=15, block_row_size_in=15,
+                                                   similarity_limit_in=0.73, similarity_output_function_in=write_pair_to_file,
+                                                   result_file_name_in="dcs.txt", number_of_processes_in=8)
                 dcs()
             else:
                 print("ERROR: Similarity measure is unkown! Use -h or -? to show help...")
