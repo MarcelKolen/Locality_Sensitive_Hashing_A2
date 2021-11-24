@@ -140,10 +140,19 @@ class SimilarityBase:
                             print(f"Pair {bucket[i]}:{bucket[j]} are similar ({sim})")
 
     def bucket_metrics(self):
+        """
+        Calculate metrics such as:
+        - Average size of buckets
+        - Min size of buckets
+        - Max size of buckets
+        :return:
+        """
+
         average_length = 0.
         min = np.inf
         max = 0.
 
+        # Loop through all buckets to calculate metrics.
         for bucket in self.buckets:
             len_bucket = len(bucket)
 
@@ -265,6 +274,7 @@ class SimilarityBase:
         # Sort buckets from smallest to largest.
         self.sort_buckets()
 
+        # Information on buckets.
         self.bucket_metrics()
 
         print("Evaluating similarity canidates")
