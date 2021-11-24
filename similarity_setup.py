@@ -52,9 +52,9 @@ class SimilarityBase:
         :return:
         """
 
-        self.buckets = list(filter(lambda dict_value: len(dict_value) > 1, self.buckets.values()))
+        self.buckets = [list(set(el)) for el in list(filter(lambda dict_value: len(dict_value) > 1, self.buckets.values()))]
 
-    def find_similar_users(self, similarity_function, mask=None):
+    def find_similar_users(self, similarity_function, bucket_range=None):
         """
         Users who share the same hash bucket in the bucket table are similarity candidates.
         For each candidate pair in the buckets, check their actual similarity using the similarity function
@@ -64,25 +64,24 @@ class SimilarityBase:
         :return:
         """
 
+        print(bucket_range)
+
         # For each bucket loop through their items (note that the items are lists of user ids).
-        teller = 1
-        for bucket in self.buckets if mask is None else list(compress(self.buckets, mask)):
+        for bucket_i in bucket_range if bucket_range is not None else range(0, len(self.buckets)):
+            bucket = self.buckets[bucket_i]
             bucket_len = len(bucket)
 
             # If a bucket is of length 1 (or smaller) then only one user exists in this bucket.
             # This user does not have any comparison pairs and can therefore be ignored.
-            #print("BL: " + str(bucket_len))
             if bucket_len > 1:
 
                 # Loop through all combination pairs: [k(k-1)/2]
                 # and check whether they exceed the similarity threshold.
                 for i in range(0, bucket_len):
                     for j in range(i + 1, bucket_len):
-                        #print("i: " + str(i) + " j: " + str(j))
                         if (sim := similarity_function(bucket[i], bucket[j])) > self.similarity_limit:
                             self.similarity_output_function(bucket[i], bucket[j])
-                            print(f" {teller}: Pair {bucket[i]}:{bucket[j]} are similar ({sim})")
-                            teller += 1
+                            print(f"Pair {bucket[i]}:{bucket[j]} are similar ({sim})")
 
     def __init__(self, user_movie_matrix_in=None, similarity_output_function_in=None, random_seed_in=None,
                  similarity_limit_in=None, signature_size_in=None, block_amount_in=None, block_row_size_in=None, *kwargs):

@@ -73,6 +73,7 @@ class JaccardSimilarityBase(SimilarityBase):
         :param usr_1: A users ID
         :return: The jaccard similarity between 0. and 1. (inclusive boundaries)
         """
+
         # Convert user movie ratings to binary values. If given a rating (user rated movie) give a 1,
         # else a 0 (user has not rated movie)
         usr_0_cp_binary = np.where(np.array(self.user_movie_matrix.getrow(usr_0).toarray()) > 0, 1, 0)
@@ -80,7 +81,6 @@ class JaccardSimilarityBase(SimilarityBase):
 
         # The intersect can also be seen as the "and" and the union can also been seen as an "or". Calculate the jaccard
         # similarity by taking the quotient of the sums of the and and or of the two users.
-        #print("0: " + str(usr_0) + " 1: " + str(usr_1) + " CS: " + str(np.bitwise_and(usr_0_cp_binary, usr_1_cp_binary).sum() / np.bitwise_or(usr_0_cp_binary, usr_1_cp_binary).sum()))
         return np.bitwise_and(usr_0_cp_binary, usr_1_cp_binary).sum() / np.bitwise_or(usr_0_cp_binary, usr_1_cp_binary).sum()
 
     def __init__(self, *args, **kwargs):
