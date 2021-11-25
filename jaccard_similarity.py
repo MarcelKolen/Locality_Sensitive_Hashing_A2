@@ -77,6 +77,8 @@ class JaccardSimilarityBase(SimilarityBase):
         :param user_range: A range of users (rows) over which the loop should run
         :return: An 2D array containing signatures for the users based on minhashing
         """
+
+        # Init empty user signatures of size given by the user_range and the signature size.
         user_signatures = np.empty(shape=(user_range.stop - user_range.start, self.signature_size))
         user_signatures[:] = np.NaN
 

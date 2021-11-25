@@ -1,3 +1,7 @@
+### Advances In Data Mining
+### Assignment 2
+### Luit Verschuur 1811053, Marcel Kolenbrander 1653415.
+
 import multiprocessing
 
 class Parallels:
@@ -18,6 +22,17 @@ class Parallels:
             self.max_number_of_workers = 1
 
     def _wrapper_caller(self, fn, args, p_num, return_dict, _kwargs=None):
+        """
+        Wrapper function which calls the target function and catches their return values in the return dictionary.
+
+        :param fn: Target function
+        :param args: Arguments for the function
+        :param p_num: Process number (internal PID) used for the return dict
+        :param return_dict: Managed process data dictionary used to capture return values
+        :param _kwargs: Optional key word arguments
+        :return:
+        """
+
         # Check how to unpack the provided arguments
         if isinstance(args, tuple):
             # Store the return value in a managed dictionary

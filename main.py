@@ -130,25 +130,25 @@ def main():
         del data_file
 
         # Call main similarity measure classes and execute their instances to
-        # find similar pairs and print to designated file.
+        # find similar pairs and print to designated file. (Again, I want switch statements).
         try:
             if similarity_measure is SimilarityMeasureOptions.JACCARD:
                 js = JaccardSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
                                            signature_size_in=150, block_amount_in=25, block_row_size_in=6,
                                            similarity_limit_in=0.5, similarity_output_function_in=write_pair_to_file,
-                                           result_file_name_in="js.txt", number_of_processes_in=8)
+                                           result_file_name_in="js.txt", number_of_processes_in=6)
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
                 cs = CosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
-                                          signature_size_in=150, block_amount_in=10, block_row_size_in=15,
+                                          signature_size_in=357, block_amount_in=21, block_row_size_in=17,
                                           similarity_limit_in=0.73, similarity_output_function_in=write_pair_to_file,
-                                          result_file_name_in="cs.txt", number_of_processes_in=8)
+                                          result_file_name_in="cs.txt", number_of_processes_in=6)
                 cs()
             elif similarity_measure is SimilarityMeasureOptions.DISCRETE_COSINE:
                 dcs = DiscreteCosineSimilarityBase(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
                                                    signature_size_in=225, block_amount_in=15, block_row_size_in=15,
                                                    similarity_limit_in=0.73, similarity_output_function_in=write_pair_to_file,
-                                                   result_file_name_in="dcs.txt", number_of_processes_in=8)
+                                                   result_file_name_in="dcs.txt", number_of_processes_in=6)
                 dcs()
             else:
                 print("ERROR: Similarity measure is unkown! Use -h or -? to show help...")

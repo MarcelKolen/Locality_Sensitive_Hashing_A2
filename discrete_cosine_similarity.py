@@ -21,6 +21,10 @@ class DiscreteCosineSimilarityBase(CosineSimilarityBase):
 
     def calculate_user_similarity(self, usr_0, usr_1):
         """
+        Calculate the discrete cosine similarity (a value between 0. and 1.) of two given users. Compare the users using
+        their original data entries. The cosine similarity is the angle between two users represented as
+        vectors. The discrete cosine similarity is the same principle, except that all non zero values have been
+        substituted for ones.
 
         :param usr_0: A users ID
         :param usr_1: A users ID
@@ -30,9 +34,15 @@ class DiscreteCosineSimilarityBase(CosineSimilarityBase):
         if usr_0 == usr_1:
             return 0
 
+        # The distance is the dot product of the two binary vectors representing the users.
         distance = self.binary_matrix.getrow(usr_0).dot(self.binary_matrix.getrow(usr_1).transpose()).toarray()[0][0]
+
+        # The size is the product of the two norms of the binary vectors, in this case the product of the square rooted
+        # count of non zero elements in the binary user vectors.
         size = self.sqrt_non_zero_count_binary_matrix[usr_0] * self.sqrt_non_zero_count_binary_matrix[usr_1]
 
+        # The similarity is the difference between one and the degrees in 180 proportion of the arc cosine on the
+        # distance over size.
         return 1 - (math.degrees(math.acos(distance / size))/180)
 
     def init(self, *args, **kwargs):

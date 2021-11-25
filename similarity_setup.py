@@ -5,6 +5,7 @@
 
 import numpy as np
 import time
+import random
 
 from parallels import Parallels
 
@@ -230,6 +231,7 @@ class SimilarityBase:
 
         # Set random seed.
         np.random.seed(self.random_seed)
+        random.seed(self.random_seed)
 
         # Call init for the inherit classes.
         self.init(*args, **kwargs)
