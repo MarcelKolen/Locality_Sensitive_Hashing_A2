@@ -5,17 +5,13 @@
 
 import numpy as np
 import math
-import time
 
-from scipy.sparse import csr_matrix
 from scipy.sparse import linalg as spla
-from numpy import linalg as LA
 
-from parallels import Parallels
 from similarity_setup import SimilarityBase
 
 
-class CosineSimilarityBase(SimilarityBase):
+class CosineSimilarity(SimilarityBase):
     linalg_norm = []
 
     def calculate_user_similarity(self, usr_0, usr_1):
@@ -28,9 +24,6 @@ class CosineSimilarityBase(SimilarityBase):
         :param usr_1: A users ID
         :return: The cosine similarity between 0. and 1. (inclusive boundaries)
         """
-
-        if usr_0 == usr_1:
-            return 0
 
         # The distance is the dot product of the two vectors representing the users.
         distance = self.user_movie_matrix.getrow(usr_0).dot(self.user_movie_matrix.getrow(usr_1).transpose()).toarray()[0][0]

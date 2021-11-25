@@ -4,21 +4,13 @@
 import multiprocessing
 
 import numpy as np
-from scipy.sparse import csr_matrix
 
-import time
-
-from parallels import Parallels
 from similarity_setup import SimilarityBase
 
 
-class JaccardSimilarityBase(SimilarityBase):
+class JaccardSimilarity(SimilarityBase):
     column_permutations = ...
-    signature_size = ...
-    user_signatures = ...
-    block_amount = ...
-    block_column_size = ...
-    buckets = {}
+    binary_matrix = []
 
     def random_permutation(self, size):
         """
@@ -57,17 +49,13 @@ class JaccardSimilarityBase(SimilarityBase):
 
         # Convert user movie ratings to binary values. If given a rating (user rated movie) give a 1,
         # else a 0 (user has not rated movie)
-        usr_0_cp_binary = self.user_movie_matrix.getrow(usr_0).copy()
-        usr_0_cp_binary.data = np.ones_like(usr_0_cp_binary.data)
-        usr_0_cp_binary = usr_0_cp_binary.toarray()
 
-        usr_1_cp_binary = self.user_movie_matrix.getrow(usr_1).copy()
-        usr_1_cp_binary.data = np.ones_like(usr_1_cp_binary.data)
-        usr_1_cp_binary = usr_1_cp_binary.toarray()
+        usr_0_binary = self.binary_matrix.getrow(usr_0).toarray()
+        usr_1_binary = self.binary_matrix.getrow(usr_1).toarray()
 
         # The intersect can also be seen as the "and" and the union can also been seen as an "or". Calculate the jaccard
-        # similarity by taking the quotient of the sums o the and and or of the two users.
-        return np.bitwise_and(usr_0_cp_binary, usr_1_cp_binary).sum() / np.bitwise_or(usr_0_cp_binary, usr_1_cp_binary).sum()
+        # similarity by taking the quotient of the sums of the and, and or of the two users.
+        return np.bitwise_and(usr_0_binary, usr_1_binary).sum() / np.bitwise_or(usr_0_binary, usr_1_binary).sum()
 
     def generate_signatures_for_users(self, user_range):
         """
@@ -75,7 +63,7 @@ class JaccardSimilarityBase(SimilarityBase):
         The collection of min hashes form the signature for the users.
 
         :param user_range: A range of users (rows) over which the loop should run
-        :return: An 2D array containing signatures for the users based on minhashing
+        :return: A 2D array containing signatures for the users based on minhashing
         """
 
         # Init empty user signatures of size given by the user_range and the signature size.
@@ -99,5 +87,9 @@ class JaccardSimilarityBase(SimilarityBase):
         self.column_permutations = np.empty((self.signature_size, self.user_movie_matrix_shape[1]))
 
         self.generate_random_permutations()
+
+        # Convert matrix into a binary matrix where all 0 values remain zero and all non zero values are 1.
+        self.binary_matrix = self.user_movie_matrix.copy()
+        self.binary_matrix.data = np.ones_like(self.binary_matrix.data)
 
         self.welcome_text = "Now running the Jaccard Similarity Routine"

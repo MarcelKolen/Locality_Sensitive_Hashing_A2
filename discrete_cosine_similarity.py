@@ -5,17 +5,11 @@
 
 import numpy as np
 import math
-import time
 
-from scipy.sparse import csr_matrix
-from numpy import linalg as LA
-
-from parallels import Parallels
-from similarity_setup import SimilarityBase
-from cosine_similarity import CosineSimilarityBase
+from cosine_similarity import CosineSimilarity
 
 
-class DiscreteCosineSimilarityBase(CosineSimilarityBase):
+class DiscreteCosineSimilarity(CosineSimilarity):
     binary_matrix = []
     sqrt_non_zero_count_binary_matrix = []
 
@@ -30,9 +24,6 @@ class DiscreteCosineSimilarityBase(CosineSimilarityBase):
         :param usr_1: A users ID
         :return: The discrete cosine similarity between 0. and 1. (inclusive boundaries)
         """
-
-        if usr_0 == usr_1:
-            return 0
 
         # The distance is the dot product of the two binary vectors representing the users.
         distance = self.binary_matrix.getrow(usr_0).dot(self.binary_matrix.getrow(usr_1).transpose()).toarray()[0][0]
