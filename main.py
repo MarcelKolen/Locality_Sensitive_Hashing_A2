@@ -136,17 +136,17 @@ def main():
                 js = JaccardSimilarity(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
                                        signature_size_in=180, block_amount_in=30, block_row_size_in=6,
                                        similarity_limit_in=0.5, similarity_output_function_in=write_pair_to_file,
-                                       result_file_name_in="js.txt", number_of_processes_in=6)
+                                       result_file_name_in="js.txt", number_of_processes_in=4)
                 js()
             elif similarity_measure is SimilarityMeasureOptions.COSINE:
                 cs = CosineSimilarity(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
-                                      signature_size_in=630, block_amount_in=35, block_row_size_in=18,
+                                      signature_size_in=180, block_amount_in=12, block_row_size_in=15,
                                       similarity_limit_in=0.73, similarity_output_function_in=write_pair_to_file,
                                       result_file_name_in="cs.txt", number_of_processes_in=6)
                 cs()
             elif similarity_measure is SimilarityMeasureOptions.DISCRETE_COSINE:
                 dcs = DiscreteCosineSimilarity(user_movie_matrix_in=user_movie_sp_matrix, random_seed_in=random_seed,
-                                               signature_size_in=500, block_amount_in=25, block_row_size_in=20,
+                                               signature_size_in=180, block_amount_in=12, block_row_size_in=15,
                                                similarity_limit_in=0.73, similarity_output_function_in=write_pair_to_file,
                                                result_file_name_in="dcs.txt", number_of_processes_in=6)
                 dcs()
